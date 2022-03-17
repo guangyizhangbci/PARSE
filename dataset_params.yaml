@@ -1,0 +1,49 @@
+
+# Dataset Params
+
+SEED:
+  Subject_No: 15
+  Session_No: 2
+  Channel_No: 62
+  Band_No: 5
+  Class_No: 3
+  Feature_No: 310
+  PATH: '/media/patrick/DATA/SEED/'
+
+
+SEED-IV:
+  Subject_No: 15
+  Session_No: 3
+  Channel_No: 62
+  Band_No: 5
+  Class_No: 4
+  Feature_No: 310
+  PATH: '/media/patrick/DATA/SEED_V/'
+
+SEED-V:
+  Subject_No: 16
+  Fold_No: 3
+  Channel_No: 62
+  Band_No: 5
+  Class_No: 5
+  Feature_No: 310
+  PATH: '/media/patrick/DATA/SEED_V/'
+
+
+AMIGOS:
+  Subject_No: 37
+  Channel_No: 62
+  Band_No: 14
+  Class_No: 2
+  Segment_No: 340
+  Feature_No: 105
+  PATH: '/media/patrick/DATA/AMIGOS/'
+
+
+
+
+
+
+
+
+#
