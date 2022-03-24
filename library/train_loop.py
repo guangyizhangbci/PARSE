@@ -13,10 +13,10 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
 class TrainLoop():
-    def __init__(self, global_params):
+    def __init__(self, training_params):
         super(TrainLoop, self).__init__()
 
-        self.params  = global_params
+        self.params  = training_params
 
 
     '''
@@ -35,7 +35,7 @@ class TrainLoop():
             logits_u_w= model(inputs_u_w, compute_model=True)
 
 
-
+            '''generate psudo-labels based on averaging model predictions of weakly and strongly augmented unlabeled data'''
             p = (torch.softmax(logits_u_s, dim=1) + torch.softmax(logits_u_w, dim=1)) / 2
             pt = p**(1/self.params['T'])
 
@@ -52,7 +52,7 @@ class TrainLoop():
 
         lam = max(lam, 1-lam)
 
-
+        '''shuffle the index, interpolation between random pair of labeled and unlabeled samples'''
         idx = torch.randperm(all_inputs.size(0))
 
         input_a, input_b = all_inputs, all_inputs[idx]
@@ -71,7 +71,6 @@ class TrainLoop():
         logits = [model(mixed_input[0], compute_model=True)] # only use the output of model
         for input in mixed_input[1:]:
             logits.append(model(input, compute_model=True))
-
 
 
         # put interleaved samples back
@@ -129,9 +128,7 @@ class TrainLoop():
         targets_x_digital = torch.max(targets_x, 1)[1]
 
         Lx = F.cross_entropy(logits_x, targets_x_digital, reduction='mean')
-        Lu = (F.cross_entropy(logits_u_s, targets_u_digital,
-                                  reduction='none') * mask).mean()
-
+        Lu = (F.cross_entropy(logits_u_s, targets_u_digital, reduction='none') * mask).mean()
 
         loss = Lx + Lu
 
@@ -171,8 +168,8 @@ class TrainLoop():
 
         '''Random Logits Interporlation'''
 
-        # lambd = torch.rand(inputs_x_total.shape[0], 3).to(device)
-        lambd = 1.0
+        lambd = torch.rand(inputs_x_total.shape[0], 3).to(device)
+        # lambd = 1.0
 
         logits_x_total_final = lambd* z_prime_x + (1-lambd)* z_d_prime_x
 
@@ -226,7 +223,6 @@ class TrainLoop():
             logits.append(model(input))
 
 
-
         # put interleaved samples back
 
         logits = interleave(logits, self.params['batch_size'])
@@ -243,7 +239,9 @@ class TrainLoop():
         c_tau = self.params['threshold'] * final_sum
 
         max_probs = torch.max(target_u_w_tiled, dim=-1)[0]
-        mask = max_probs.ge(c_tau).float() # mask if and only if greater or equal than threshold
+        # mask if and only if greater or equal than threshold
+
+        mask = max_probs.ge(c_tau).float()
 
 
 
@@ -255,19 +253,14 @@ class TrainLoop():
 
 
 
-        Lx =F.cross_entropy(logits_x_total_final[inputs_x_s.shape[0]:], targets_x_digital, reduction='mean')
-
-
         target_u_w_tiled = Variable(target_u_w_tiled, requires_grad=False)
         target_u_w_tiled_digital = torch.max(target_u_w_tiled, 1)[1]
 
 
-        Lu = (F.cross_entropy(logits_u_s, target_u_w_tiled_digital,
-                                  reduction='none') * mask)
-
-        # print(unsupervised_weight)
-        loss = Lx + 1* torch.mean(Lu, 0) + lam*F.cross_entropy(logits_x, mixed_x_digital, reduction='mean')
-
+        '''Loss Function'''
+        Lx =F.cross_entropy(logits_x_total_final[inputs_x_s.shape[0]:], targets_x_digital, reduction='mean')
+        Lu = (F.cross_entropy(logits_u_s, target_u_w_tiled_digital, reduction='none') * mask)
+        loss = Lx + unsupervised_weight* torch.mean(Lu, 0) + lam*F.cross_entropy(logits_x, mixed_x_digital, reduction='mean')
 
 
         optimizer.zero_grad()
@@ -283,30 +276,25 @@ class TrainLoop():
     ***PARSE***
     '''
 
-
     def train_step_parse(self, inputs_x, targets_x, inputs_u, model, optimizer, unsupervised_weight):
 
         with torch.no_grad():
+            '''no gradients are propgated during following steps'''
 
-            '''Data augmentation applied on EEG data'''
-
+            '''apply strong and weak augmentation on labeled and unlabeled data'''
             inputs_x_s, inputs_x_w = model(inputs_x, compute_model=False)
             inputs_u_s, inputs_u_w = model(inputs_u, compute_model=False)
 
             inputs_total  = torch.cat([inputs_x_w, inputs_u, inputs_u_w, inputs_u_s], 0)
 
-
-            '''Feed forward the origina and augmented EEG to model to obtain logits (classes probabilities of model prediction)'''
-
-
             logits_total =  model(inputs_total, compute_model=True)[0]
 
             logits_x_w, logits_u, logits_u_w, logits_u_s =  logits_total.chunk(4)
 
-
-            '''Label Guessing, no gradients backpropagated during the process'''
-
+            '''generate emotion psudo-labels based on averaging model predictions of original, weakly and strongly augmented unlabeled data'''
             p = (torch.softmax(logits_u, dim=1) + torch.softmax(logits_u_w, dim=1) + torch.softmax(logits_u_s, dim=1)) / 3
+
+            '''sharpen the averaged predictions'''
             pt = p**(1/self.params['T'])
 
             targets_u = pt / pt.sum(dim=1, keepdim=True)
@@ -317,14 +305,11 @@ class TrainLoop():
             target_u_w = torch.softmax(logits_u_w.detach()/self.params['T'], dim=-1)
             targets_u_w_digital = torch.max(target_u_w, dim=-1)[1]
 
-
             target_x_w = torch.softmax(logits_x_w.detach()/self.params['T'], dim=-1)
             targets_x_w_digital = torch.max(target_x_w, dim=-1)[1]
 
 
-        '''
-        Mix-Up
-        '''
+        '''Mixup'''
 
         inputs_x_total  = torch.cat([inputs_x, inputs_x_w, inputs_x_s], dim=0)
         target_x_total  = torch.cat([targets_x, targets_x, targets_x],  dim=0)
@@ -337,32 +322,29 @@ class TrainLoop():
         all_targets = torch.cat([target_x_total, target_u_total], dim=0)
 
 
-        '''lambda is used for linear interpolation, it is randomly generated per training batch and obeys Beta distribution'''
+        '''lambda value is randomly generated within the range of [0,1] in each training batch. The random values obey Beta distribution'''
         lam = np.random.beta(self.params['alpha'],self.params['alpha'])
 
-
-        '''linear interpolation between labeled and unlabeled representation'''
-
-        idx = torch.randperm(inputs_u_total.size(0))
 
         input_a,  input_b   = inputs_x_total, inputs_u_total
         target_a, target_b  = target_x_total, target_u_total
 
 
+        '''interpolated sets of EEG data and emotion labels '''
         mixed_input  = lam * input_a  + (1 - lam) * input_b
         mixed_target = lam * target_a + (1 - lam) * target_b
 
 
+        '''interpolated set of domain labels (labeled Vs. unlabeled)'''
         label_dm_init  = torch.ones((mixed_input.shape[0], 1))
-
         mixed_label_dm = torch.cat([label_dm_init*lam, label_dm_init*(1-lam)], 1).to(device)
         mixed_label_dm_digital = torch.max(mixed_label_dm, 1)[1]
 
         all_inputs_final = torch.cat([inputs_x, inputs_u_s, mixed_input], dim=0)
 
 
-        '''interleave labeled and unlabed samples between batches to get correct batchnorm calculation'''
 
+        '''interleave labeled and unlabed samples between batches to get correct batchnorm calculation'''
         all_inputs_final = list(torch.split(all_inputs_final, self.params['batch_size']))
         all_inputs_final = interleave(all_inputs_final, self.params['batch_size'])
 
@@ -373,14 +355,13 @@ class TrainLoop():
             total_logits_d.append(model(input)[1])
 
 
-
+        '''put interleaved samples back'''
         total_logits_c = interleave(total_logits_c, self.params['batch_size'])
         total_logits_d = interleave(total_logits_d, self.params['batch_size'])
 
-
+        '''classifier and discriminator outputs of interpolated data (EEG, emotion and domain labels)'''
         mixed_logits_c = torch.cat(total_logits_c[2:], dim=0)
         mixed_logits_d = torch.cat(total_logits_d[2:], dim=0)
-
 
 
         logits_c_x, logits_c_u_s = total_logits_c[0], total_logits_c[1]
@@ -390,18 +371,15 @@ class TrainLoop():
         targets_x_digital = torch.max(targets_x, 1)[1]
 
 
-        '''training loss terms'''
-
+        '''Loss Function'''
         Lx = F.cross_entropy(logits_c_x, targets_x_digital, reduction='mean')
         Lu = F.cross_entropy(logits_c_u_s, targets_u_w_digital,reduction='mean')
         L_dm = F.cross_entropy(mixed_logits_d, mixed_label_dm_digital, reduction='mean')
         L_cm =torch.mean((mixed_prob_c - mixed_target)**2)
 
-
         weight_1 = self.params['w_da']
         weight_2 = unsupervised_weight
 
-        '''final total loss'''
         loss = Lx + weight_1*(lam*L_cm + L_dm)+ weight_2*torch.mean(Lu, 0)
 
 
@@ -413,32 +391,27 @@ class TrainLoop():
         return loss.item()
 
 
+    def eval_step(self, inputs, labels, model):
+
+        if self.params['method'] == 'PARSE':
+            outputs_classification = model(inputs, compute_model=True)[0]
+        else:
+            outputs_classification = model(inputs, compute_model=True)
+
+        classification_pred = torch.max(outputs_classification, 1)[1]
 
 
+        batch_size = labels.shape[0]
+        digital_labels = torch.max(labels, 1)[1]
+        # print(digital_labels.shape)
+
+        err = nn.CrossEntropyLoss()(outputs_classification, digital_labels)
+
+        y_true = digital_labels.detach().cpu().clone().numpy()
+        y_pred = classification_pred.detach().cpu().clone().numpy()
 
 
-
-def eval_step(inputs, labels, model, eval_params):
-
-    if eval_params['method'] == 'PARSE':
-        outputs_classification = model(inputs, compute_model=True)[0]
-    else:
-        outputs_classification = model(inputs, compute_model=True)
-
-    classification_pred = torch.max(outputs_classification, 1)[1]
-
-
-    batch_size = labels.shape[0]
-    digital_labels = torch.max(labels, 1)[1]
-    # print(digital_labels.shape)
-
-    err = nn.CrossEntropyLoss()(outputs_classification, digital_labels)
-
-    y_true = digital_labels.detach().cpu().clone().numpy()
-    y_pred = classification_pred.detach().cpu().clone().numpy()
-
-
-    return err.item(), y_true, y_pred
+        return err.item(), y_true, y_pred
 
 
 
