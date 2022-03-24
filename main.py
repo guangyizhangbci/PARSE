@@ -295,8 +295,8 @@ if __name__ == '__main__':
         label_addr = './PARSE/DATA/SEED_V/EEG/label/{}_{}.npy'   # Subject_No, Fold_No
 
     elif args.dataset == 'AMIGOS':
-        data_addr  = './PARSE/DATA/AMIGOS/psd/{}.npy'    # Subject_No
-        label_addr = './PARSE/DATA/AMIGOS/label/{}.npy'  # Subject_No
+        data_addr  = './PARSE/DATA/AMIGOS/EEG/psd/{}.npy'    # Subject_No
+        label_addr = './PARSE/DATA/AMIGOS/EEG/label/{}.npy'  # Subject_No
 
     else:
         raise Exception('Datasets Name Error')
