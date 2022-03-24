@@ -27,14 +27,14 @@ pip3 install -r ./requirements.txt
 2 - Download dataset, then load data, proprocessing data, and perfom feature extraction. In SEED-series datasets, you can use the features (e.g. differential entropy) that have been released by the dataset provider. Neither the preprocessing and feature extraction scripts nor the extracted features have been shared in the AMIGOS dataset. Therefore, we provide the [data processing and feature extraction](./library/data_processing.py) code while strictly following the official dataset description and the original publication in which the dataset was published.
 
 
-3 - Save the preprocessed data and EEG into separate folders (e.g., '/train/de/' and '/train/psd/'). Move EEG features and corresponding labels to the address shown in [main](./main.py). 
+3 - Save the preprocessed data and EEG into separate folders (e.g., '/train/de/' and '/train/psd/'). Move EEG features and corresponding labels to the address shown in [main](./main.py https://github.com/guangyizhangbci/PARSE/main.py#L279-L302). 
 
 
 
 
  ## Document Description
  
-- `\library\model`: 
+- `\library\model`: model architect
 - `\library\optmization`:  
 - `\library\train_loop`:  
 - `\main`: core code for implmentation of our proposed PARSE and other three holistic semi-supervised methods (MixMatch, FixMatch and AdaMatch) for EEG representation learning.     
