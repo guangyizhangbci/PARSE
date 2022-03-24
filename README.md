@@ -3,19 +3,17 @@ This is implementation of [Parse: Pairwise Alignment of Representations in Semi-
 
 This repository contains the source code of our paper, using following datasets:
 
-- Emotion Recoginition: 
-
-    - [SEED](https://bcmi.sjtu.edu.cn/home/seed/seed.html): 15 subjects participated experiments with videos as emotion stimuli (positive/negative/neutral) and EEG was recorded with 62 channels at sampling rate of 1000Hz.
-
-    - [SEED-IV](https://bcmi.sjtu.edu.cn/home/seed/seed-iv.html): 15 subjects participated experiments with videos as emotion stimuli (happy/sad/neutral/fear) and EEG was recorded with 62 channels at sampling rate of 1000Hz.
-
-- Motor Imagery: 
-
-    - [SEED-V](https://bcmi.sjtu.edu.cn/home/seed/seed-v.html): 16 participants were involved in experiments with videos as emotion stimuli (happy/sad/disgust/neutral/fear). 62 EEG recordings were collected with a sampling frequency of 1000Hz.
 
 
-    - [AMIGOS](http://www.eecs.qmul.ac.uk/mmv/datasets/amigos/readme.html):37 participants completed experiments with both 16 short and 4 long video clips as stimuli. Valence and arousal scores are assigned by annotators to each of 20-second video snippets. 14 EEG channels were recorded at a sampling rate of
-128Hz.
+- [SEED](https://bcmi.sjtu.edu.cn/home/seed/seed.html): 15 subjects participated experiments with videos as emotion stimuli (three emotions: positive/negative/neutral) and EEG was recorded with 62 channels at sampling rate of 1000Hz.
+
+- [SEED-IV](https://bcmi.sjtu.edu.cn/home/seed/seed-iv.html): 15 subjects participated experiments with videos as emotion stimuli (four emotions: happy/sad/neutral/fear).  62 EEG recordings were collected with a sampling frequency of 1000Hz.
+
+- [SEED-V](https://bcmi.sjtu.edu.cn/home/seed/seed-v.html): 16 participants were involved in experiments with videos as emotion stimuli (five emotions: happy/sad/disgust/neutral/fear). 62 EEG recordings were collected with a sampling frequency of 1000Hz.
+
+
+- [AMIGOS](http://www.eecs.qmul.ac.uk/mmv/datasets/amigos/readme.html):37 participants completed experiments with both 16 short and 4 long video clips as stimuli. Valence and arousal scores are assigned by annotators to each of 20-second video snippets. A threshold of (0.0) was used
+to transform continuous scores into binary classes (positive and negative). 14 EEG channels were recorded at a sampling rate of 128Hz.
 
 ## Prerequisites
 Please follow the steps below in order to be able to train our models:
