@@ -27,7 +27,7 @@ Please follow the steps below in order to be able to train our models:
 pip3 install -r ./requirements.txt
 ```
 
-2 - Download dataset, then load data, proprocessing data, and perfom feature extraction. In SEED-series datasets, features (e.g. differential entropy) have been released by the dataset provider. In AMIGOS dataset, preprocessing and feature extraction codes have not been provided dataset. Therefore, we  strictly follow the official dataset description and the paper, and provide the [data processing and feature extraction](./library/data_processing.py) code.
+2 - Download dataset, then load data, proprocessing data, and perfom feature extraction. In SEED-series datasets, you can use the features (e.g. differential entropy) that have been released by the dataset provider. In AMIGOS dataset, preprocessing and feature extraction codes have not been  provided. Therefore, we strictly followed the official dataset description and the original paper published the dataset, and provide the [data processing and feature extraction](./library/data_processing.py) code.
 
 3 - Save the preprocessed data and EEG into separate folders (e.g., '/train/de/' and '/train/psd/'). Move EEG features and corresponding labels to the address shown in [main](./main.py). 
 
