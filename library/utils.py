@@ -65,7 +65,7 @@ def load_dataset_to_device(data, label, batch_size, class_flag=False, shuffle_fl
     return dataset
 
 
-def train_val_split(labels, n_labeled_per_class, random_seed):
+def train_val_split(labels, n_labeled_per_class, random_seed, class_num):
     labels = np.array(labels)
     train_labeled_idxs = []
     train_unlabeled_idxs = []
@@ -73,12 +73,12 @@ def train_val_split(labels, n_labeled_per_class, random_seed):
 
     np.random.seed(random_seed)
 
-    for i in range(3):
+    for i in range(class_num):
         idxs = np.where(labels == i)[0]
         np.random.shuffle(idxs)
         train_labeled_idxs.extend(idxs[:n_labeled_per_class])
-        train_unlabeled_idxs.extend(idxs[n_labeled_per_class:-200])
-        val_idxs.extend(idxs[-200:])
+        train_unlabeled_idxs.extend(idxs[n_labeled_per_class:-50])
+        val_idxs.extend(idxs[-50:])
     np.random.shuffle(train_labeled_idxs)
     np.random.shuffle(train_unlabeled_idxs)
     np.random.shuffle(val_idxs)
@@ -90,13 +90,14 @@ def train_split(labels, n_labeled_per_class, random_seed, class_num):
     labels = np.array(labels)
     train_labeled_idxs = []
     train_unlabeled_idxs = []
-    val_idxs = []
 
+    np.random.seed(random_seed)
+    for i in range(class_num):
         idxs = np.where(labels == i)[0]
-
         np.random.shuffle(idxs)
         train_labeled_idxs.extend(idxs[:n_labeled_per_class])
         train_unlabeled_idxs.extend(idxs[n_labeled_per_class: ])
+
     np.random.shuffle(train_labeled_idxs)
     np.random.shuffle(train_unlabeled_idxs)
 
@@ -105,7 +106,7 @@ def train_split(labels, n_labeled_per_class, random_seed, class_num):
 
 
 def interleave_offsets(batch, nu):
-    groups = [batch // (nu + 1)] * (nu + 1) 
+    groups = [batch // (nu + 1)] * (nu + 1)
     for x in range(batch - sum(groups)):
         groups[-x - 1] += 1
     offsets = [0]
