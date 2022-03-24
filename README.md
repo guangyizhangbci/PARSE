@@ -32,7 +32,11 @@ pip3 install -r ./requirements.txt
 4. train:
 - Train PARSE by 10 labeled data of SEED-V dataset:  
 ```
-CUDA_VISIBLE_DEVICES=0 python3 ./PARSE/main.py --dataset SEED-V --method PARSE --n-labeled 10 --batch-size 8 --alpha 0.25
+CUDA_VISIBLE_DEVICES=0 python3 ./PARSE/main.py --manualSeed 0 --dataset SEED-V --method PARSE --n-labeled 10 --batch-size 8 --alpha 0.25
+```
+- Train MixMatch by 25 labeled data of AMIGOS dataset:  
+```
+CUDA_VISIBLE_DEVICES=0 python3 ./PARSE/main.py --manualSeed 0 --dataset AMIGOS --method AdaMatch --n-labeled 25 --batch-size 64 --alpha 0.75 --threshold 0.6
 ```
 
 
