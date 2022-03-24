@@ -29,7 +29,11 @@ pip3 install -r ./requirements.txt
 
 3 - Save the preprocessed data and EEG into separate folders (e.g., '/train/de/' and '/train/psd/'). Move EEG features and corresponding labels to the address shown in [here](./main.py#L279-L302). 
 
-
+4. train:
+- Train PARSE by 10 labeled data of SEED-V dataset:  
+```
+CUDA_VISIBLE_DEVICES=0 python3 ./PARSE/main.py --dataset SEED-V --method PARSE --n-labeled 10 --batch-size 8 --alpha 0.25
+```
 
 
  ## Document Description
