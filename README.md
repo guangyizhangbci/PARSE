@@ -54,7 +54,7 @@ If you find this material useful, please cite the following article:
   year={2022}
 }
 ```
-<img src="/doc/architecture.jpg" width="1100" height="350">
+<img src="/architecture.jpg" width="1100" height="350">
 
 
 
