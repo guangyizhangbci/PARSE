@@ -9,21 +9,14 @@ import math
 from tqdm import tqdm
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
-from matplotlib.patches import Patch
 from scipy.stats import uniform
-from sklearn import svm
 import matplotlib.pyplot as plt
 import numpy as np
-import time
 from scipy.integrate import simps
 
-path_amigos = '/media/patrick/DATA/AMIGOS/Data_Preprocessed_P{}/Data_Preprocessed_P{}.mat'
+path_amigos = './PARSE/DATA/AMIGOS/Data_Preprocessed_P{}/Data_Preprocessed_P{}.mat'
 
 fs = 128
-#
-# raw = loadmat(path_dreamer)
-#
-#
 
 
 def preprocessing_normal(data, feature):
@@ -228,8 +221,8 @@ for participant in tqdm(range(1, 41)):
     if not any(participant == c for c in exclude_list):
         print(participant)
         features, labels = labeling_EEG(participant)
-        np.save('/media/patrick/DATA/AMIGOS/EEG_subject_{}.npy'.format(participant), features)
-        np.save('/media/patrick/DATA/AMIGOS/label_subject_{}.npy'.format(participant), labels)
+        np.save('./PARSE/DATA/AMIGOS/EEG/psd/{}.npy'.format(participant), features)
+        np.save('./PARSE/DATA/AMIGOS/EEG/label/{}.npy'.format(participant), labels)
 
 
 
