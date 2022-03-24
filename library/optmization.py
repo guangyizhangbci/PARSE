@@ -1,14 +1,14 @@
 '''
-Train Loops of all methods
+Training Loops
 '''
 import numpy as np
 import torch
 import math
 
 class Optmization():
-    def __init__(self, training_params):
+    def __init__(self, optmization_params):
         super(Optmization, self).__init__()
-        self.params   = training_params
+        self.params   = optmization_params
         self.lr       = self.params['lr']
         self.current_epoch = self.params['current_epoch']
         self.total_epochs  = self.params['total_epochs']
@@ -17,6 +17,8 @@ class Optmization():
 
 
     def ada_weight(self):
+        '''Warm-up function'''
+        '''Smoothly raises from 0 to 1 for the first half of the training and remains at 1 for the second half'''
         total_steps  = self.total_epochs * self.max_iters
         current_step = self.current_epoch * self.max_iters + self.current_batch
         pi = np.float32(np.pi)
@@ -25,6 +27,7 @@ class Optmization():
 
 
     def decayed_learning_rate(self):
+        '''Slowly decreases learning rate'''
         alpha = 0.25
         step = self.current_epoch*self.max_iters + self.current_batch
         decay_steps  = self.total_epochs*self.max_iters
@@ -35,6 +38,7 @@ class Optmization():
 
 
     def linear_rampup(self):
+        ''''Slowly increase the weight applied on unsupervised loss'''
         current = self.current_epoch + self.current_batch/self.max_iters
         rampup_length = self.total_epochs
         if rampup_length == 0:
@@ -45,14 +49,13 @@ class Optmization():
 
 
     def cal_consistency_weight(self):
-
+        '''Sets the weights for the consistency loss'''
         epoch    = self.current_epoch
         init_ep  = 0
         end_ep   = self.params['total_epochs']
         init_w   = self.params['init_w']
         end_w    = self.params['end_w']
 
-        """Sets the weights for the consistency loss"""
         if epoch > end_ep:
             weight_cl = end_w
         elif epoch < init_ep:
@@ -63,7 +66,6 @@ class Optmization():
             weight_cl = (math.exp(-5.0 * (1.0 - T) * (1.0 - T))) * (end_w - init_w) + init_w #exp
         #print('Consistency weight: %f'%weight_cl)
         return weight_cl
-
 
 
 
