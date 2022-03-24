@@ -16,11 +16,9 @@ import torch.utils.data as data
 import torchvision.transforms as transforms
 import torch.nn.functional as F
 from torchsummary import summary
-import matplotlib.animation as animation
 from torch.autograd import Variable
 import os,sys,inspect
 from library.train_loop import TrainLoop
-from library.train_loop import eval_step
 from library.optmization import Optmization
 from library.optmization import ema_model, WeightEMA
 from library.model import Conv_EEG
@@ -76,7 +74,6 @@ args = parser.parse_args()
 state = {k: v for k, v in args._get_kwargs()}
 
 
-
 def load_config(name):
     with open(os.path.join(sys.path[0], name)) as file:
         config = yaml.safe_load(file)
@@ -120,8 +117,11 @@ class Model(nn.Module):
 
 def ssl_process(Net, X_train, X_test, Y_train, Y_test, n_labeled_per_class, random_seed):
 
+
     data_train,  data_test  = np.expand_dims(X_train, axis=1), np.expand_dims(X_test, axis=1)
     label_train, label_test = Y_train, Y_test
+
+    '''the choice of labeled and unlabeled samples'''
 
     train_labeled_idxs, train_unlabeled_idxs  = train_split(label_train, n_labeled_per_class, random_seed, config[args.dataset]['Class_No'])
 
@@ -146,17 +146,18 @@ def ssl_process(Net, X_train, X_test, Y_train, Y_test, n_labeled_per_class, rand
 
 
 
-
 def train(Net, train_dataset_labeled, train_dataset_unlabeled, test_dataset, max_iterations):
-    global_prams = {'batch_size': args.batch_size, 'alpha': args.alpha, 'threshold': args.threshold, 'T': args.T,
-                    'w_da': args.w_da, 'lambda_u': args.lambda_u}
 
-    test_metric = np.zeros((args.epochs))
+    training_params = {'method': args.method, 'batch_size': args.batch_size, 'alpha': args.alpha,
+                        'threshold': args.threshold, 'T': args.T,
+                        'w_da': args.w_da, 'lambda_u': args.lambda_u}
+
+    test_metric = np.zeros((args.epochs, 1))
+    train_loss_epoch =np.zeros((args.epochs, 1))
     for epoch in range(args.epochs):
         start = time.time()
         train_loss_batch = []
         train_acc_batch = []
-
 
         if args.method == 'FixMatch':
             ema_Net = ema_model(Model(Conv_EEG).to(device))
@@ -167,7 +168,6 @@ def train(Net, train_dataset_labeled, train_dataset_unlabeled, test_dataset, max
             pass
 
         Net.train()
-
 
         labeled_train_iter    = iter(train_dataset_labeled)
         unlabeled_train_iter  = iter(train_dataset_unlabeled)
@@ -187,32 +187,35 @@ def train(Net, train_dataset_labeled, train_dataset_unlabeled, test_dataset, max
                 inputs_u, _ = unlabeled_train_iter.next()
 
 
-
             optimizer = optim.Adam(Net.parameters(), args.lr)
-
             inputs_x, targets_x, inputs_u = inputs_x.to(device), targets_x.to(device, non_blocking=True), inputs_u.to(device)
 
-            training_params = {'lr': args.lr, 'current_epoch': epoch, 'total_epochs': args.epochs, 'current_batch': batch_idx, 'max_iterations': max_iterations,
-                                'init_w': args.init_weight, 'end_w': args.end_weight}
+            optmization_params = {'lr': args.lr, 'current_epoch': epoch, 'total_epochs': args.epochs, 'current_batch': batch_idx, 'max_iterations': max_iterations,
+                                 'init_w': args.init_weight, 'end_w': args.end_weight}
 
 
-            if args.method == 'MixMatch':
-                unsupervised_weight =  Optmization(training_params).linear_rampup()
-                loss = TrainLoop(global_prams).train_step_mix(inputs_x, targets_x, inputs_u, Net, optimizer, unsupervised_weight)
+            '''
+            Training options for various methods
+            '''
+
+            if args.method   == 'MixMatch':
+                unsupervised_weight =  Optmization(optmization_params).linear_rampup()
+                loss = TrainLoop(training_params).train_step_mix(inputs_x, targets_x, inputs_u, Net, optimizer, unsupervised_weight)
 
             elif args.method == 'FixMatch':
 
-                loss = TrainLoop(global_prams).train_step_fix(inputs_x, targets_x, inputs_u, Net, a_optimizer, ema_optimizer)
+                loss = TrainLoop(training_params).train_step_fix(inputs_x, targets_x, inputs_u, Net, a_optimizer, ema_optimizer)
 
             elif args.method == 'AdaMatch':
-                unsupervised_weight = Optmization(training_params).ada_weight()
-                reduced_lr = Optmization(training_params).decayed_learning_rate()
+                unsupervised_weight = Optmization(optmization_params).ada_weight()
+                reduced_lr = Optmization(optmization_params).decayed_learning_rate()
                 optimizer = optim.Adam(Net.parameters(), reduced_lr)
-                loss = TrainLoop(global_prams).train_step_ada(inputs_x, targets_x, inputs_u, Net, optimizer, unsupervised_weight)
+                loss = TrainLoop(training_params).train_step_ada(inputs_x, targets_x, inputs_u, Net, optimizer, unsupervised_weight)
 
             elif args.method == 'PARSE':
-                unsupervised_weight = Optmization(training_params).ada_weight()
-                loss = TrainLoop(global_prams).train_step_parse(inputs_x, targets_x, inputs_u, Net, optimizer, unsupervised_weight)
+                unsupervised_weight = Optmization(optmization_params).ada_weight()
+
+                loss = TrainLoop(training_params).train_step_parse(inputs_x, targets_x, inputs_u, Net, optimizer, unsupervised_weight)
 
             else:
                 raise Exception('Methods Name Error')
@@ -223,9 +226,6 @@ def train(Net, train_dataset_labeled, train_dataset_unlabeled, test_dataset, max
 
         Net.eval()
 
-        eval_params = {'dataset': args.dataset, 'method': args.method}
-
-
         with torch.no_grad():
             test_loss_batch = []
             test_ytrue_batch = []
@@ -235,7 +235,7 @@ def train(Net, train_dataset_labeled, train_dataset_unlabeled, test_dataset, max
                 image_batch = image_batch.to(device)
                 label_batch = label_batch.to(device)
 
-                loss, y_true, y_pred  = eval_step(image_batch,label_batch, Net, eval_params)
+                loss, y_true, y_pred  = TrainLoop(training_params).eval_step(image_batch,label_batch, Net)
                 test_loss_batch.append(loss)
 
                 test_ytrue_batch.append(y_true)
@@ -249,10 +249,21 @@ def train(Net, train_dataset_labeled, train_dataset_unlabeled, test_dataset, max
             metric = f1_score(test_ytrue_epoch, test_ypred_epoch, average='macro')
         else:
             metric = accuracy_score(test_ytrue_epoch, test_ypred_epoch)
-        test_metric[epoch] = metric
-    print(metric)
-    return np.max(test_metric)
 
+        test_metric[epoch] = metric
+        train_loss_epoch[epoch] = Average(train_loss_batch)
+
+    return test_metric
+
+
+
+def net_init(model):
+    '''load and initialize the model'''
+    Net = Model(model).to(device)
+    Net.apply(WeightInit)
+    Net.apply(WeightClipper)
+
+    return Net
 
 
 
@@ -264,44 +275,44 @@ if __name__ == '__main__':
     torch.manual_seed(args.manualSeed)
     np.random.seed(args.manualSeed)
 
-    '''
-    dataset address loader
-    '''
+
+    ''' data and label address loader for each dataset '''
     if args.dataset=='SEED':
-        train_de    = '/media/patrick/DATA/SEED/New/intra_session_v0/train/de_{}_{}.npy'  # Subject_No, Session_No
-        test_de     = '/media/patrick/DATA/SEED/New/intra_session_v0/test/de_{}_{}.npy'  # Subject_No, Session_No
-        train_label = '/media/patrick/DATA/SEED/New/intra_session_v0/train/label_{}_{}.npy'
-        test_label  = '/media/patrick/DATA/SEED/New/intra_session_v0/test/label_{}_{}.npy'
+        train_de    = './PARSE/DATA/SEED/New/intra_session/train/de/{}_{}.npy'  # Subject_No, Session_No
+        test_de     = './PARSE/DATA/SEED/New/intra_session/test/de/{}_{}.npy'  # Subject_No, Session_No
+        train_label = './PARSE/DATA/SEED/New/intra_session/train/label/{}_{}.npy'
+        test_label  = './PARSE/DATA/SEED/New/intra_session/test/label/{}_{}.npy'
 
 
     elif args.dataset =='SEED-IV':
-        train_de    = '/media/patrick/DATA/SEED_IV/new/intra_session/train/de_{}_{}.npy'  # Subject_No, Session_No
-        test_de     = '/media/patrick/DATA/SEED_IV/new/intra_session/test/de_{}_{}.npy'  # Subject_No, Session_No
-        train_label = '/media/patrick/DATA/SEED_IV/new/intra_session/train/label_{}_{}.npy'
-        test_label  = '/media/patrick/DATA/SEED_IV/new/intra_session/test/label_{}_{}.npy'
+        train_de    = './PARSE/DATA/SEED_IV/new/intra_session/train/de/{}_{}.npy'  # Subject_No, Session_No
+        test_de     = './PARSE/DATA/SEED_IV/new/intra_session/test/de/{}_{}.npy'  # Subject_No, Session_No
+        train_label = './PARSE/DATA/SEED_IV/new/intra_session/train/label/{}_{}.npy'
+        test_label  = './PARSE/DATA/SEED_IV/new/intra_session/test/label/{}_{}.npy'
 
     elif args.dataset == 'SEED-V':
-        data_addr  = '/media/patrick/DATA/SEED_V/EEG/de_{}_{}.npy'      # Subject_No, Fold_No
-        label_addr = '/media/patrick/DATA/SEED_V/EEG/label_{}_{}.npy'   # Subject_No, Fold_No
+        data_addr  = './PARSE/DATA/SEED_V/EEG/de/{}_{}.npy'      # Subject_No, Fold_No
+        label_addr = './PARSE/DATA/SEED_V/EEG/label/{}_{}.npy'   # Subject_No, Fold_No
 
     elif args.dataset == 'AMIGOS':
-        data_addr  = '/media/patrick/DATA/AMIGOS/EEG_subject_{}.npy'    # Subject_No
-        label_addr = '/media/patrick/DATA/AMIGOS/label_subject_{}.npy'  # Subject_No
+        data_addr  = './PARSE/DATA/AMIGOS/psd/{}.npy'    # Subject_No
+        label_addr = './PARSE/DATA/AMIGOS/label/{}.npy'  # Subject_No
 
     else:
         raise Exception('Datasets Name Error')
 
 
 
-
+    '''A set of random seeds for later use of choosing labeled and unlabeled data from training set'''
     random_seed_arr = np.array([100, 42, 19, 57, 598])
 
     for seed in tqdm(range(len(random_seed_arr))):
         random_seed = random_seed_arr[seed]
 
-        n_labeled_per_class = args.n_labeled
+        n_labeled_per_class = args.n_labeled # number of labeled samples need to be chosen for each emotion class
 
-        directory = '/home/patrick/Desktop/{}_result/semisupervised/{}/run_{}/'.format(args.dataset, args.method, seed+1)
+        '''create result directory'''
+        directory = '/home/patrick/Desktop/PARSE/{}_result/ssl_method_{}/run_{}/'.format(args.dataset, args.method, seed+1)
 
         if not os.path.exists(directory):
             try:
@@ -314,18 +325,17 @@ if __name__ == '__main__':
         dataset_dict = config[args.dataset]
 
 
+        '''
+        Experiment setup for all four pulbic datasets
+        '''
         if args.dataset=='SEED':
 
             acc_array = np.zeros((dataset_dict['Subject_No'], dataset_dict['Session_No'], args.epochs))
+
             for subject_num in (range(1, dataset_dict['Subject_No']+1)):
                 for session_num in range(1, dataset_dict['Session_No']+1):
 
-                    Net = Model(Conv_EEG).to(device)
-
-                    #
-                    Net.apply(WeightInit)
-                    Net.apply(WeightClipper)
-
+                    Net = net_init(Conv_EEG) # Network Initilization
 
                     X_train_de = np.load(train_de.format(subject_num, session_num))
                     X_test_de  = np.load(test_de.format(subject_num, session_num))
@@ -333,18 +343,17 @@ if __name__ == '__main__':
                     X = np.vstack((X_train_de, X_test_de))
                     X_new = np.reshape(X, (X.shape[0]*X.shape[1], X.shape[2]))
 
+                    '''Normalize EEG features to the range of [0,1] before fed into model'''
                     scaler = MinMaxScaler()
                     X_new  = scaler.fit_transform(X_new)
 
                     X_de   = copy.deepcopy(X_new)
 
-                    X_train = X_de[0: X_train_de.shape[0]*8]
-                    X_test  = X_de[X_train_de.shape[0]*8:]
+                    X_train = X_de[0: X_train_de.shape[0]]
+                    X_test  = X_de[X_train_de.shape[0]:]
 
                     Y_train = np.load(train_label.format(subject_num, session_num))
                     Y_test  = np.load(test_label.format(subject_num, session_num))
-                    Y_train, Y_test = np.repeat(Y_train, 8, axis=0),  np.repeat(Y_test, 8, axis=0)
-
 
                     acc_array[subject_num-1, session_num-1]  =  ssl_process(Net, X_train, X_test, Y_train, Y_test, n_labeled_per_class, random_seed)
 
@@ -353,17 +362,13 @@ if __name__ == '__main__':
             np.savetxt(os.path.join(directory, "acc_labeled_{}.csv").format(n_labeled_per_class), acc_array , delimiter=",")
 
 
-
-        if args.dataset == 'SEED-IV':
+        elif args.dataset == 'SEED-IV':
             acc_array = np.zeros((dataset_dict['Subject_No'], dataset_dict['Session_No'], args.epochs))
+
             for subject_num in (range(1, dataset_dict['Subject_No']+1)):
                 for session_num in range(1, dataset_dict['Session_No']+1):
 
-                    Net = Model(Conv_EEG).to(device)
-
-                    #
-                    Net.apply(WeightInit)
-                    Net.apply(WeightClipper)
+                    Net = net_init(Conv_EEG)
 
                     X_train = np.load(train_de.format(subject_num, subject_num))
                     X_test  = np.load(test_de.format(subject_num, subject_num))
@@ -387,9 +392,9 @@ if __name__ == '__main__':
             np.savetxt(os.path.join(directory, 'acc_labeled_{}.csv').format(n_labeled_per_class), acc_array , delimiter=",")
 
 
-
-        if args.dataset == 'SEED-V':
+        elif args.dataset == 'SEED-V':
             acc_array = np.zeros((dataset_dict['Subject_No'], dataset_dict['Fold_No'], args.epochs))
+
             for subject_num in range(1, dataset_dict['Subject_No']+1):
 
                 X1 = np.load(data_addr.format(subject_num, 1))
@@ -409,15 +414,14 @@ if __name__ == '__main__':
 
                 for fold_num in range(dataset_dict['Fold_No']):
 
-                    Net = Model(Conv_EEG).to(device)
-                    Net.apply(WeightInit)
-                    Net.apply(WeightClipper)
+                    Net = net_init(Conv_EEG)
 
+                    optimizer = optim.Adam(Net.parameters(), lr=args.lr)
+                    # ema_optimizer= WeightEMA(Net, ema_Net, alpha=args.ema_decay)
 
                     fold_1_index = [i for i in range(0, len(X1))]
                     fold_2_index = [i for i in range(len(X1), len(X1)+len(X2))]
                     fold_3_index = [i for i in range(len(X1)+len(X2), len(X1)+len(X2)+len(X3))]
-
 
                     if fold_num ==0:
                         train_index, test_index = fold_1_index + fold_2_index, fold_3_index
@@ -431,10 +435,7 @@ if __name__ == '__main__':
 
                     acc_array[subject_num-1, fold_num] = ssl_process(Net, X_train, X_test, Y_train, Y_test, n_labeled_per_class, random_seed)
 
-                    torch.cuda.empty_cache()
-
             np.savetxt(os.path.join(directory, 'acc_labeled_{}.csv').format(n_labeled_per_class), acc_array , delimiter=",")
-
 
 
         elif args.dataset == 'AMIGOS':
@@ -474,9 +475,7 @@ if __name__ == '__main__':
                 count = 0
                 for train_index, test_index in tqdm(loo.split(X)):
 
-                    Net = Model(Conv_EEG).to(device)
-                    Net.apply(WeightInit)
-                    Net.apply(WeightClipper)
+                    Net = net_init(Conv_EEG)
 
                     X_train, X_test, Y_train, Y_test = X[train_index], X[test_index], Y[train_index], Y[test_index]
                     # print(X_test.shape)
@@ -522,13 +521,10 @@ if __name__ == '__main__':
                     else:
                         f1_addr = 'f1_arousal_labeled_{}.csv'
 
-                np.savetxt(os.path.join(directory, f1_addr).format(n_labeled_per_class),  f1_array ,  delimiter=",")
-
+                np.savetxt(os.path.join(directory, f1_addr).format(n_labeled_per_class), f1_array, delimiter=",")
 
         else:
             raise Exception('Datasets Name Error')
-
-
 
 
 
