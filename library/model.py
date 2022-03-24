@@ -1,27 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Mar 14 15:47:22 2020
-
-@author: patrick
-"""
 from __future__ import print_function
 import numpy as np
-import math
-from math import log, e
-from tqdm import tqdm
 import copy
-import time
 import torch.nn as nn
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import torch.utils.data
-from torch.autograd import Variable
-import torchvision.datasets as dset
-import torchvision.transforms as transforms
-import torchvision.utils as vutils
-from torchsummary import summary
 from torch.autograd import Variable
 import os,sys,inspect
 import yaml
@@ -123,8 +109,9 @@ class Conv_EEG(nn.Module):
 
         if grl_flag==True:
             output_c = self.classifier(flatten_embed)
+            '''Add GRL before discriminator so that the gradients in the encoder will be reversed'''
             embed    = grad_reverse(flatten_embed)
-            output_d = self.discriminator(flatten_embed)
+            output_d = self.discriminator(embed)
             output= (output_c, output_d)
 
         elif ae_flag==True:
