@@ -337,8 +337,8 @@ if __name__ == '__main__':
 
                     Net = net_init(Conv_EEG) # Network Initilization
 
-                    X_train_de = np.load(train_de.format(subject_num, session_num))
-                    X_test_de  = np.load(test_de.format(subject_num, session_num))
+                    X_train = np.load(train_de.format(subject_num, session_num))
+                    X_test  = np.load(test_de.format(subject_num, session_num))
 
                     '''Normalize EEG features to the range of [0,1] before fed into model'''
                     X = np.vstack((X_train, X_test))
