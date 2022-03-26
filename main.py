@@ -370,8 +370,8 @@ if __name__ == '__main__':
 
                     Net = net_init(Conv_EEG)
 
-                    X_train = np.load(train_de.format(subject_num, subject_num))
-                    X_test  = np.load(test_de.format(subject_num, subject_num))
+                    X_train = np.load(train_de.format(subject_num, session_num))
+                    X_test  = np.load(test_de.format(subject_num, session_num))
 
 
                     X = np.vstack((X_train, X_test))
@@ -382,8 +382,8 @@ if __name__ == '__main__':
                     X_train = X[0: X_train.shape[0]]
                     X_test  = X[X_train.shape[0]:]
 
-                    Y_train = np.load(train_label.format(subject_num, subject_num))
-                    Y_test  = np.load(test_label.format(subject_num, subject_num))
+                    Y_train = np.load(train_label.format(subject_num, session_num))
+                    Y_test  = np.load(test_label.format(subject_num, session_num))
 
                     acc_array[subject_num-1, session_num-1]  =  ssl_process(Net, X_train, X_test, Y_train, Y_test, n_labeled_per_class, random_seed)
 
