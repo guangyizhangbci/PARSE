@@ -340,17 +340,14 @@ if __name__ == '__main__':
                     X_train_de = np.load(train_de.format(subject_num, session_num))
                     X_test_de  = np.load(test_de.format(subject_num, session_num))
 
-                    X = np.vstack((X_train_de, X_test_de))
-                    X_new = np.reshape(X, (X.shape[0]*X.shape[1], X.shape[2]))
-
                     '''Normalize EEG features to the range of [0,1] before fed into model'''
+                    X = np.vstack((X_train, X_test))
+
                     scaler = MinMaxScaler()
-                    X_new  = scaler.fit_transform(X_new)
+                    X = scaler.fit_transform(X)
 
-                    X_de   = copy.deepcopy(X_new)
-
-                    X_train = X_de[0: X_train_de.shape[0]]
-                    X_test  = X_de[X_train_de.shape[0]:]
+                    X_train = X[0: X_train.shape[0]]
+                    X_test  = X[X_train.shape[0]:]
 
                     Y_train = np.load(train_label.format(subject_num, session_num))
                     Y_test  = np.load(test_label.format(subject_num, session_num))
