@@ -45,7 +45,7 @@ CUDA_VISIBLE_DEVICES=0 python3 ./PARSE/main.py --manualSeed 0 --dataset AMIGOS -
 - `\library\model`: model architecture 
 - `\library\optmization`:  unsupervised loss weight, weight optmization, learning rate decay, etc. 
 - `\library\train_loop`:  training step for our proposed [PARSE](./library/train_loop.py#L279-L391) and other three holistic semi-supervised methods ([MixMatch](./library/train_loop.py#L26-L98), [FixMatch](./library/train_loop.py#L105-L140) and [AdaMatch](./library/train_loop.py#L148-L271)) for EEG representation learning.
-- `\main`: implementation of experiment set-up for several recent state-of-the-art SSL pipelines and our method PARSE for all the four datasets. 
+- `\main`: implementation of experiment set-up for several recent state-of-the-art SSL methods ([MixMatch](https://papers.nips.cc/paper/2019/file/1cd138d0499a68f4bb72bee04bbec2d7-Paper.pdf), [FixMatch](https://proceedings.neurips.cc//paper/2020/file/06964dce9addb1c5cb5d6e3d9838f733-Paper.pdf), [Adamatch](https://openreview.net/pdf?id=Q5uh1Nvv5dm)) and our proposed PARSE for all the four datasets. 
  
 
 
