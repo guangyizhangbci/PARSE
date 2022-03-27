@@ -251,8 +251,7 @@ def train(Net, train_dataset_labeled, train_dataset_unlabeled, test_dataset, max
             metric = accuracy_score(test_ytrue_epoch, test_ypred_epoch)
 
         test_metric[epoch] = metric
-        train_loss_epoch[epoch] = Average(train_loss_batch)
-
+        
     return test_metric
 
 
