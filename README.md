@@ -1,8 +1,9 @@
 # PARSE 
 This is implementation of [Parse: Pairwise Alignment of Representations in Semi-Supervised EEG Learning for Emotion Recognition](https://arxiv.org/abs/2202.05400) in PyTorch (Version 1.11.0).
 
-This repository contains the source code of our paper, using following datasets:
+<img src="/architecture.jpg" width="900" height="350">
 
+This repository contains the source code of our paper, using following datasets:
 
 
 - [SEED](https://bcmi.sjtu.edu.cn/home/seed/seed.html): 15 subjects participated experiments with videos as emotion stimuli (three emotions: positive/negative/neutral) and EEG was recorded with 62 channels at sampling rate of 1000Hz.
@@ -60,7 +61,7 @@ If you find this material useful, please cite the following article:
   year={2022}
 }
 ```
-<img src="/architecture.jpg" width="900" height="350">
+
 
 
 
