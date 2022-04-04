@@ -3,7 +3,7 @@ This is implementation of [Parse: Pairwise Alignment of Representations in Semi-
 
 <p align="center">
   <img 
-    width="900"
+    width="700"
     height="300"
     src="/architecture.jpg"
   >
