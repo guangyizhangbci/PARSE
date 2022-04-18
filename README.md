@@ -48,7 +48,7 @@ CUDA_VISIBLE_DEVICES=0 python3 ./PARSE/main.py --manualSeed 0 --dataset AMIGOS -
 ```
 
 5 - Pretrained Model:
-We provided [pre-trained models](https://drive.google.com/drive/folders/1WJapwgyyZHMAsm4toVPt1Q_vB6hBNx1j?usp=sharing)(1.4 GB) for SEED-V dataset as examples which can be downloaded from Google Drive. The downloaded folder contains pre-trained models of each 3-fold experiment for all 16 participants in all 6 few labeled scenarios. An example of evaluation code is provided [here](./eval_example.py)
+We provided [pre-trained models](https://drive.google.com/drive/folders/1WJapwgyyZHMAsm4toVPt1Q_vB6hBNx1j?usp=sharing)(1.4 GB) for SEED-V dataset as examples which can be downloaded from Google Drive. The downloaded folder contains pre-trained models of each 3-fold experiment for all 16 participants in all 6 few labeled scenarios. Save the downloaded to here, and run the example of [evaluation code](./eval_example.py) with bash file. 
 
  ## Document Description
  
