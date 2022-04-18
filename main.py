@@ -311,7 +311,7 @@ if __name__ == '__main__':
         n_labeled_per_class = args.n_labeled # number of labeled samples need to be chosen for each emotion class
 
         '''create result directory'''
-        directory = '/home/patrick/Desktop/PARSE/{}_result/ssl_method_{}/run_{}/'.format(args.dataset, args.method, seed+1)
+        directory = './PARSE/{}_result/ssl_method_{}/run_{}/'.format(args.dataset, args.method, seed+1)
 
         if not os.path.exists(directory):
             try:
