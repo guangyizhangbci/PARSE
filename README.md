@@ -47,6 +47,8 @@ Train MixMatch by 25 labeled data of AMIGOS dataset:
 CUDA_VISIBLE_DEVICES=0 python3 ./PARSE/main.py --manualSeed 0 --dataset AMIGOS --method AdaMatch --n-labeled 25 --batch-size 64 --alpha 0.75 --threshold 0.6
 ```
 
+5 - Pretrained Model:
+We provided [pre-trained models](https://drive.google.com/drive/folders/1WJapwgyyZHMAsm4toVPt1Q_vB6hBNx1j?usp=sharing)(1.4 GB) for SEED-V dataset as examples which can be downloaded from Google Drive. The downloaded folder contains pre-trained models of each 3-fold experiment for all 16 participants in all 6 few labeled scenarios. 
 
  ## Document Description
  
