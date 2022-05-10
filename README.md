@@ -32,7 +32,8 @@ Please follow the steps below in order to be able to train our models:
 pip3 install -r ./requirements.txt
 ```
 
-2 - Download dataset, then load data, proprocessing data, and perfom feature extraction. In SEED-series datasets, you can use the features (e.g. differential entropy) that have been released by the dataset provider. Neither the preprocessing and feature extraction scripts nor the extracted features have been shared by the AMIGOS dataset provider. Therefore, we provide the [data processing and feature extraction](./library/data_processing.py) code while strictly following the official dataset description and the original publication in which the dataset was published.
+2 - Download the dataset, then load data, perform pre-processing, and perfom feature extraction. In SEED-series datasets, you can use the features (e.g. differential entropy) that have been released by the dataset provider. Neither the preprocessing and feature extraction scripts nor the extracted features have been shared by the AMIGOS dataset provider. Therefore, 
+the [data processing and feature extraction](./library/data_processing.py) code while strictly following the official dataset description and the original publication in which the dataset was published.
 
 
 3 - Save the preprocessed data and EEG into separate folders (e.g., '/train/de/' and '/train/psd/'). Move EEG features and corresponding labels to the address shown in [here](./main.py#L279-L302). 
@@ -48,7 +49,7 @@ CUDA_VISIBLE_DEVICES=0 python3 ./PARSE/main.py --manualSeed 0 --dataset AMIGOS -
 ```
 
 5 - Pretrained Model:
-We provided [pre-trained models](https://drive.google.com/drive/folders/1WJapwgyyZHMAsm4toVPt1Q_vB6hBNx1j?usp=sharing) (1.4 GB) for SEED-V dataset as examples which can be downloaded from Google Drive. The downloaded folder contains pre-trained models of each 3-fold experiment for all 16 participants in all 6 few labeled scenarios. Save the downloaded files to [this address](./eval_example.py#L86), and run the [evaluation code](./eval_example.py) using [bash file](./local_run.sh):
+We provide the [pre-trained models](https://drive.google.com/drive/folders/1WJapwgyyZHMAsm4toVPt1Q_vB6hBNx1j?usp=sharing) (1.4 GB) for SEED-V dataset as examples which can be downloaded from Google Drive. The downloaded folder contains pre-trained models of each 3-fold experiment for all 16 participants in all 6 few labeled scenarios. Save the downloaded files to [this address](./eval_example.py#L86), and run the [evaluation code](./eval_example.py) using [bash file](./local_run.sh):
 ```
 bash ./PARSE/local_run.sh
 ```
