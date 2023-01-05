@@ -1,5 +1,5 @@
 # PARSE 
-This is the implementation of [PARSE: Pairwise Alignment of Representations in Semi-Supervised EEG Learning for Emotion Recognition](https://arxiv.org/abs/2202.05400) in PyTorch (Version 1.11.0).
+This is the implementation of [PARSE: Pairwise Alignment of Representations in Semi-Supervised EEG Learning for Emotion Recognition](https://ieeexplore.ieee.org/document/9904937) in PyTorch (Version 1.11.0).
 
 <p align="center">
   <img 
