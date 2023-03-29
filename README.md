@@ -9,6 +9,11 @@ This is the implementation of [PARSE: Pairwise Alignment of Representations in S
   >
 </p>
 
+## Install
+
+```
+pip install parse-pytorch==1.10.0
+```
 
 This repository contains the source code of our paper, using the following datasets:
 
@@ -22,12 +27,7 @@ This repository contains the source code of our paper, using the following datas
 
 - [AMIGOS](http://www.eecs.qmul.ac.uk/mmv/datasets/amigos/readme.html): 37 participants completed experiments with both 16 short and 4 long video clips as stimuli. Continuous valence and arousal scores in the range of [-1, 1] were assigned by annotators to each 20-second video snippet. The continuous scores were then transformed into binary classes (positive and negative) with a threshold of 0. A total of 14 EEG channels were recorded at a sampling rate of 128Hz.
 
-## Install
 
-```
-pip install parse-pytorch==1.10.0
-
-```
 
 ## Prerequisites
 Please follow the steps below in order to be able to train our models:
