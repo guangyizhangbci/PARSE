@@ -12,7 +12,7 @@ This is the implementation of [PARSE: Pairwise Alignment of Representations in S
 ## Install
 
 ```
-pip install parse-pytorch==1.10.0
+pip install parse-pytorch==1.10.1
 ```
 
 This repository contains the source code of our paper, using the following datasets:
