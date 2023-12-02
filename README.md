@@ -74,10 +74,14 @@ If you find this material useful, please cite the following article:
 ## Citation
 ```
 @article{zhang2022parse,
-  title={PARSE: Pairwise Alignment of Representations in Semi-Supervised EEG Learning for Emotion Recognition},
-  author={Zhang, Guangyi and Etemad, Ali},
-  journal={arXiv preprint arXiv:2202.05400},
-  year={2022}
+  title={Parse: Pairwise alignment of representations in semi-supervised eeg learning for emotion recognition},
+  author={Zhang, Guangyi and Davoodnia, Vandad and Etemad, Ali},
+  journal={IEEE Transactions on Affective Computing},
+  volume={13},
+  number={4},
+  pages={2185--2200},
+  year={2022},
+  publisher={IEEE}
 }
 ```
 
